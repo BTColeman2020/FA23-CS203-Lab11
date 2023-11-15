@@ -33,7 +33,9 @@ public class Encrypter {
      * @throws Exception if an error occurs while reading or writing the files
      */
     public void encrypt(String inputFilePath, String encryptedFilePath) throws Exception {
-        //TODO: Call the read method, encrypt the file contents, and then write to new file
+        String message = readFile(inputFilePath);
+        this.encrypted = performShift(message, shift);
+        writeFile(this.encrypted, encryptedFilePath);
     }
 
     /**
@@ -44,7 +46,9 @@ public class Encrypter {
      * @throws Exception if an error occurs while reading or writing the files
      */
     public void decrypt(String messageFilePath, String decryptedFilePath) throws Exception {
-        //TODO: Call the read method, decrypt the file contents, and then write to new file
+        String encryptedMessage = readFile(messageFilePath);
+        this.encrypted = performShift(encryptedMessage, -shift);
+        writeFile(this.encrypted, decryptedFilePath);
     }
 
     /**
@@ -55,9 +59,15 @@ public class Encrypter {
      * @throws Exception if an error occurs while reading the file
      */
     private static String readFile(String filePath) throws Exception {
-        String message = "";
-        //TODO: Read file from filePath
-        return message;
+        StringBuilder message = new StringBuilder();
+        try (Scanner scanner = new Scanner(new File(filePath))) {
+            while (scanner.hasNextLine()) {
+                message.append(scanner.nextLine()).append("\n");
+            }
+        } catch (IOException e) {
+            throw new Exception("Error reading the file", e);
+        }
+        return message.toString();
     }
 
     /**
@@ -67,7 +77,30 @@ public class Encrypter {
      * @param filePath the path to the file where the data will be written
      */
     private static void writeFile(String data, String filePath) {
-        //TODO: Write to filePath
+        try (FileWriter writer = new FileWriter(filePath)) {
+            writer.write(data);
+        } catch (IOException e) {
+            System.err.println("Error writing to file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Performs the shift encryption or decryption on the given message.
+     *
+     * @param message the message to be shifted
+     * @param shift   the amount of shift to be applied
+     * @return the shifted message
+     */
+    private static String performShift(String message, int shift) {
+        char[] chars = message.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            char currentChar = chars[i];
+            if (Character.isLetter(currentChar)) {
+                char base = Character.isUpperCase(currentChar) ? 'A' : 'a';
+                chars[i] = (char) ((currentChar - base + shift + 26) % 26 + base);
+            }
+        }
+        return new String(chars);
     }
 
     /**
